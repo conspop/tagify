@@ -1,17 +1,52 @@
 from django.conf import settings
-from django.shortcuts import redirect
-
-client_id = settings.SPOTIFY_CLIENT_ID
-response_type = "code"
-redirect_uri = "http://localhost:8000/spotify/callback"
-scopes = "user-library-read"
+import requests
+import json
 
 
-def authorize_user():
-    payload = {
-        "response_type": response_type,
-        "client_id": client_id,
-        "scope": scopes,
-        "redirect_uri": redirect_uri,
-    }
-    redirect("https://accounts.spotify.com/authorize?", **payload)
+class SpotifyToken:
+    pass
+
+
+class SpotifyAPI:
+    def __init__(self, user):
+        self.base_url = "https://api.spotify.com/v1"
+        self.headers = {"Authorization": f"Bearer {user.profile.access_token}"}
+
+    def get_tracks_and_features(self):
+        tracks = self.get_tracks()
+        features = self.get_features(tracks)
+
+        return (tracks, features)
+
+    def get_tracks(self):
+
+        items = []
+
+        next = f"{self.base_url}/me/tracks?limit=50"
+        while next:
+            response = requests.get(next, headers=self.headers).json()
+            items += response["items"]
+            next = response["next"]
+
+        return [item["track"] for item in items]
+        
+    def get_features(self, tracks):
+        ids = [track["id"] for track in tracks]
+
+        features = []
+        number_of_tracks = len(tracks)
+        counter = 0
+        while counter < number_of_tracks:
+            if number_of_tracks - counter >= 100:
+                chunk = ids[counter : counter + 100]
+            else:
+                chunk = ids[counter:]
+            response = requests.get(
+                f"https://api.spotify.com/v1/audio-features?ids={','.join(chunk)}",
+                headers=self.headers,
+            ).json()["audio_features"]
+            features += response
+            counter += 100
+        
+        return features
+        

@@ -4,6 +4,6 @@ from django.urls import include, path
 from . import views
 
 urlpatterns = [
-    path('authorize', views.authorize),
-    path('callback', views.callback),
+    path("authorize", views.SpotifyAuthorize.as_view()),
+    path("callback", views.SpotifyCallback.as_view()),
 ]
