@@ -6,6 +6,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("spotify/", include("spotify.urls")),
     path("users/", include("users.urls")),
+    path("tracks/", include("tracks.urls")),
     url(r"^auth/", include("djoser.urls")),
     url(r"^auth/", include("djoser.urls.authtoken")),
 ]
